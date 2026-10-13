@@ -7,6 +7,7 @@ import { AuthModule } from '../auth/auth.module';
 import { UserModule } from '../user/user.module';
 import { BookingsModule } from '../bookings/bookings.module';
 import { TransactionsModule } from '../transactions/transactions.module';
+import { DashboardModule } from '../dashboard/dashboard.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -39,6 +40,7 @@ import Redis from 'ioredis';
     UserModule,
     BookingsModule,
     TransactionsModule,
+    DashboardModule,
     RedisModule,
   ],
   controllers: [AppController],
