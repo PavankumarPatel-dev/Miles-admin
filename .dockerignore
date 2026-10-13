@@ -1,0 +1,14 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+node_modules
+dist
+coverage
+build
+.temp
+.tmp
+*.log
+test
+README.md
