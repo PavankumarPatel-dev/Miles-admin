@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppDataSource } from '../../database/data-source';
 import { AuthModule } from '../auth/auth.module';
 import { UserModule } from '../user/user.module';
+import { BookingsModule } from '../bookings/bookings.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -35,6 +36,7 @@ import Redis from 'ioredis';
     }),
     AuthModule,
     UserModule,
+    BookingsModule,
     RedisModule,
   ],
   controllers: [AppController],
