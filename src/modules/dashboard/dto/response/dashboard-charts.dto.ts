@@ -28,6 +28,12 @@ export class DashboardChartsDto {
   startAt: string;
 
   @Expose()
+  endAt: string;
+
+  @Expose()
+  bucket: 'day' | 'week' | 'month';
+
+  @Expose()
   @Type(() => ChartSeriesDto)
   series: ChartSeriesDto[];
 }

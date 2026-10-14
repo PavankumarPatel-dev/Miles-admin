@@ -1,28 +1,11 @@
 import { Expose, Type } from 'class-transformer';
 
-class UserStatsDto {
+class MetricValueDto {
   @Expose()
-  total: number;
+  value: number;
 
   @Expose()
-  active: number;
-
-  @Expose()
-  newThisMonth: number;
-
-  @Expose()
-  changePercent: number | null;
-}
-
-class BookingStatsDto {
-  @Expose()
-  active: number;
-
-  @Expose()
-  completed: number;
-
-  @Expose()
-  cancelled: number;
+  changePercentage: number | null;
 }
 
 class CurrencyAmountDto {
@@ -33,25 +16,9 @@ class CurrencyAmountDto {
   amount: string;
 }
 
-class TransactionStatsDto {
+class CurrencyRevenueDto extends CurrencyAmountDto {
   @Expose()
-  total: number;
-
-  @Expose()
-  totalVolumeByCurrency: CurrencyAmountDto[];
-
-  @Expose()
-  averageTransactionByCurrency: CurrencyAmountDto[];
-
-  @Expose()
-  pending: number;
-
-  @Expose()
-  successRatePercent: number | null;
-
-  @Expose()
-  @Type(() => CurrencyAmountDto)
-  averageAmountByCurrency: CurrencyAmountDto[];
+  changePercentage: number | null;
 }
 
 class DashboardPeriodDto {
@@ -64,22 +31,52 @@ class DashboardPeriodDto {
 
 export class DashboardStatsDto {
   @Expose()
-  @Type(() => UserStatsDto)
-  users: UserStatsDto;
+  totalUsers: number | MetricValueDto;
 
   @Expose()
-  @Type(() => BookingStatsDto)
-  bookings: BookingStatsDto;
+  activeUsers: number;
 
   @Expose()
-  @Type(() => TransactionStatsDto)
-  transactions: TransactionStatsDto;
+  newThisMonth: number;
+
+  @Expose()
+  @Type(() => CurrencyRevenueDto)
+  totalRevenue: CurrencyRevenueDto[];
+
+  @Expose()
+  @Type(() => MetricValueDto)
+  activeBookings: MetricValueDto;
+
+  @Expose()
+  @Type(() => MetricValueDto)
+  pendingTransactions: MetricValueDto;
+
+  @Expose()
+  @Type(() => MetricValueDto)
+  totalBookings: MetricValueDto;
+
+  @Expose()
+  @Type(() => MetricValueDto)
+  completedBookings: MetricValueDto;
+
+  @Expose()
+  @Type(() => MetricValueDto)
+  cancelledBookings: MetricValueDto;
+
+  @Expose()
+  totalTransactions: number;
 
   @Expose()
   @Type(() => CurrencyAmountDto)
-  revenueByCurrency: CurrencyAmountDto[];
+  totalVolume: CurrencyAmountDto[];
 
   @Expose()
-  @Type(() => DashboardPeriodDto)
+  @Type(() => CurrencyAmountDto)
+  averageTransaction: CurrencyAmountDto[];
+
+  @Expose()
+  successRate: number | null;
+
+  @Expose()
   period: DashboardPeriodDto;
 }

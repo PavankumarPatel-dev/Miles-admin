@@ -48,6 +48,19 @@ const services = [
 ];
 const day = 24 * 60 * 60 * 1000;
 
+function startOfUtcWeek(date: Date) {
+  const start = new Date(date);
+  start.setUTCHours(0, 0, 0, 0);
+  start.setUTCDate(start.getUTCDate() - ((start.getUTCDay() + 6) % 7));
+  return start;
+}
+
+function addUtcDays(date: Date, days: number) {
+  const result = new Date(date);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result;
+}
+
 async function seed() {
   await AppDataSource.initialize();
   const userRepository = AppDataSource.getRepository(User);
@@ -252,6 +265,102 @@ async function seed() {
       );
     }
 
+    const now = new Date();
+    const monthStart = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 10),
+    );
+    const weekStart = startOfUtcWeek(now);
+    const monthlyTransactions = Array.from({ length: 12 }, (_, index) => {
+      const createdAt = addUtcDays(monthStart, index * 2);
+      return {
+        transactionId: `#TXN-MONTH-${String(index + 1).padStart(2, '0')}`,
+        createdAt: createdAt > now ? now : createdAt,
+        amount: 1500 + index * 325,
+        status:
+          index % 6 === 4
+            ? TransactionStatus.REFUNDED
+            : index % 5 === 3
+              ? TransactionStatus.FAILED
+              : TransactionStatus.COMPLETED,
+        type:
+          index % 6 === 4 ? TransactionType.REFUND : TransactionType.PAYMENT,
+      };
+    });
+    const weeklyTransactions = Array.from({ length: 7 }, (_, index) => {
+      const createdAt = addUtcDays(weekStart, index);
+      createdAt.setUTCHours(9 + index, 30, 0, 0);
+      return {
+        transactionId: `#TXN-WEEK-${String(index + 1).padStart(2, '0')}`,
+        createdAt: createdAt > now ? now : createdAt,
+        amount: 875 + index * 210,
+        status:
+          index === 5
+            ? TransactionStatus.REFUNDED
+            : index === 6
+              ? TransactionStatus.PENDING
+              : TransactionStatus.COMPLETED,
+        type: index === 5 ? TransactionType.REFUND : TransactionType.PAYMENT,
+      };
+    });
+
+    for (const [index, seedTransaction] of [
+      ...monthlyTransactions,
+      ...weeklyTransactions,
+    ].entries()) {
+      if (
+        await transactionRepository.findOne({
+          where: { transactionId: seedTransaction.transactionId },
+        })
+      ) {
+        continue;
+      }
+      const booking = bookings[index % bookings.length];
+      const user = users[index % users.length];
+      const transaction = await transactionRepository.save(
+        transactionRepository.create({
+          transactionId: seedTransaction.transactionId,
+          bookingId: booking.id,
+          userId: user.id,
+          paymentMethodId: methods.get(user.id)?.id ?? null,
+          type: seedTransaction.type,
+          status: seedTransaction.status,
+          amount: seedTransaction.amount.toFixed(2),
+          currency: 'INR',
+          reference: `demo_recent_${seedTransaction.transactionId.replace(
+            /[^a-z0-9]/gi,
+            '',
+          )}`,
+          description: `${booking.service} recent seed`,
+          platformFee: (seedTransaction.amount * 0.025).toFixed(2),
+          subtotal: seedTransaction.amount.toFixed(2),
+          settledAt:
+            seedTransaction.status === TransactionStatus.COMPLETED ||
+            seedTransaction.status === TransactionStatus.REFUNDED
+              ? seedTransaction.createdAt
+              : null,
+          createdAt: seedTransaction.createdAt,
+        }),
+      );
+      await activityRepository.save(
+        activityRepository.create({
+          entityType: ActivityEntityType.TRANSACTION,
+          entityId: transaction.id,
+          userId: user.id,
+          type:
+            seedTransaction.status === TransactionStatus.PENDING
+              ? 'transaction.created'
+              : `transaction.${seedTransaction.status}`,
+          title:
+            seedTransaction.status === TransactionStatus.PENDING
+              ? `Transaction ${seedTransaction.transactionId} created`
+              : `Transaction ${seedTransaction.transactionId} ${seedTransaction.status}`,
+          notes: 'Created from the recent transaction demo seed',
+          visible: true,
+          createdAt: seedTransaction.createdAt,
+        }),
+      );
+    }
+
     const alertSeed = [
       {
         title: 'Server capacity at 92%',
@@ -302,7 +411,7 @@ async function seed() {
     }
 
     console.log(
-      `Seeded admin user ${adminEmail}, ${users.length} users, ${bookings.length} bookings, and 50 transactions.`,
+      `Seeded admin user ${adminEmail}, ${users.length} users, ${bookings.length} bookings, 50 base transactions, and ${monthlyTransactions.length + weeklyTransactions.length} recent transactions.`,
     );
   } finally {
     await AppDataSource.destroy();
