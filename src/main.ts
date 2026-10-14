@@ -28,10 +28,7 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  await app.listen(
-    Number(process.env.BACKEND_PORT || 3000),
-    process.env.HOST || 'localhost',
-  );
+  await app.listen(Number(process.env.BACKEND_PORT));
 
   Logger.log(
     `API listening on http://${process.env.HOST || 'localhost'}:${process.env.BACKEND_PORT || 3000}`,
